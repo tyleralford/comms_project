@@ -1,4 +1,4 @@
-Sample frequency = 142857.142857
+Sample frequency = 142857.142857 Hz
 
 raw_data.txt contains 40 sets of 55000 samples each.
 data.txt should contain the identical data, but does not. Not sure why, I must have messed something up while saving it.
