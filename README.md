@@ -1,5 +1,5 @@
 # comms_project
-E-Week communications project built on Python using the libpruio library.
+E-Week communications project built on Python 2 using the libpruio library.
 
 See requirements.txt for a list of the required libraries. 
 
