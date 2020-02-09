@@ -1,0 +1,8 @@
+numpy
+matplotlib
+scipy
+peakutils
+
+libpruio
+# https://github.com/DTJF/libpruio
+# http://users.freebasic-portal.de/tjf/Projekte/libpruio/doc/html/index.html
