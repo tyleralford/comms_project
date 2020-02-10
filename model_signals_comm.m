@@ -5,8 +5,10 @@ clear; clc;
 
 
 global fignum;fignum=1;
+global savefigs;savefigs = true;
 
 BASIC_ANALYSIS = true;
+FREQUENCY_SWEEP_ANALYSIS = false;
 %%%%%%%%%%%%%%
 % Constants for the problem
 input.T = 10;
@@ -22,15 +24,13 @@ input.A2relA1 = 1;%ratio of tone2 amplitude/tone 1 amplitude
 %%%%%%%%%%%%%%
 input.AGC = 10;%dB Threshold above the noise floor
 input.SNR_dB = 10;
-% Signal peaks of interest
-input.f1 = 2.5e3;
-input.f2 = 3.0e3;
 %%%%%%%%%%%%%%
 
 if BASIC_ANALYSIS
-  input.SNR_dB = 10;
-  input.f1 = 2.5e3;
-  input.f2 = 3.0e3;
+  input.SNR_dB = 90;
+  input.f1 = 1.2e3;
+  input.f2 = 3.55e3;
+  input.A2relA1=10^(-0/20);%2dB difference
 
   output = simulateSystem(input);
 
@@ -39,11 +39,12 @@ if BASIC_ANALYSIS
   plotFrequencySignals(input,output);
 end
 
+
   
 %%%%%%%%%%%%%%
 % Plot the time signal
 function timeSignalPlot(input,output)
-  global fignum;
+  global fignum savefigs;
   %%%%%%%%%%%%%%
   fs = 1/input.Ts;
   f1 =   input.f1;
@@ -65,23 +66,35 @@ function timeSignalPlot(input,output)
   h=legend({'Tone #1','Tone #2'},'Location','Best');h.FontSize=14;
   grid('on');
   subplot(3,1,2);
-  plot(t(lgc),z(lgc));
+  plot(t(lgc),z(lgc),'LiNeWidth',2);
   h=xlabel('\bftime (s)');h.FontSize=12;
   h=ylabel('\bfvoltage (V)');h.FontSize=12;
   h=legend({'Tones + Noise'},'Location','Best');h.FontSize=14;
   grid('on');
   subplot(3,1,3);
-  plot(t(lgc),zc(lgc));
+  plot(t(lgc),zc(lgc),'LiNeWidth',2);
   h=xlabel('\bftime (s)');h.FontSize=12;
   h=ylabel('\bfvoltage (V)');h.FontSize=12;
   h=legend({'LED Signal'},'Location','Best');h.FontSize=14;
   grid('on');
+  
+  title_str = sprintf('Time Signals: SNR %0.f',input.SNR_dB);
+  try
+    h=sgtitle(title_str);
+  catch
+    subplot(2,1,1);
+    h=title(title_str);
+  end
+  h.FontWeight='bold';
+  h.FontSize=18;
+  title_str = sprintf('time_SNR_%d',input.SNR_dB);
+  if savefigs;print(H,'-dpng',[title_str '.png']);end
 end
 
 %%%%%%%%%%%%%%
 % Plot the frequency content
 function plotFrequencySignals(input,output)
-  global fignum;
+  global fignum savefigs;
   %%%%%%%%%%%%%%
   f1_kHz = input.f1/1e3;
   f2_kHz = input.f2/1e3;
@@ -95,27 +108,45 @@ function plotFrequencySignals(input,output)
   
   subplot(2,1,1);
   hold('on');
-  plot(f_kHz,Z_dBW);
+  legs = {};
+  f_lgc = input.fs/2*linspace(-1,1,length(output.t));
+  f_lgc = (input.min_f0 <= f_lgc & f_lgc <= input.max_f0);
+  plot(f_kHz,aindex(20*log10(abs(fftshift(fft(output.tone_input)))),f_lgc),'LineWidth',2);legs{end+1}='Pure Tonal Input';
+  plot(f_kHz,Z_dBW,'LineWidth',2);legs{end+1}='PC Aux Spectrum';
   axs=axis();
-  h=plot(f1_kHz+[0,0],axs(3:4),'ko','LineWidth',2);
-  h=plot(f2_kHz+[0,0],axs(3:4),'ko','LiNeWidth',2);
-  plot(f_kHz,avg_noise+zeros(size(f_kHz)),'r--','LineWIDTH',2);
+  h=plot(f1_kHz+[0,0],axs(3:4),'ko','LineWidth',2);legs{end+1}='Tone 1';
+  h=plot(f2_kHz+[0,0],axs(3:4),'k*','LiNeWidth',2);legs{end+1}='Tone 2';
   h=xlabel('\bffrequency (kHz)');set(h,'FoNtSiZe',16);
   h=ylabel('\bfPower Spectrum (dBW/Hz)');set(h,'FoNtSiZe',16);
-  h=legend({'PC Aux Spectrum','Tone 1','Tone 2','Average Noise Floor'},'Location','SouthWest');h.FontSize=16;
+  h=legend(legs,'Location','eAsTOutSidE');h.FontSize=16;
   grid('on');
   
   subplot(2,1,2);
   hold('on');
-  plot(f_kHz,Zc_dBW);
-  plot(f_kHz,avg_noise+zeros(size(f_kHz)),'r--','LineWIDTH',2);
-  plot(f_kHz,avg_noise+zeros(size(f_kHz))+AGC,'g--','LineWidth',2);
+  legs={};
+  h=plot(f_kHz,Zc_dBW,'LineWIDTH',2);legs{end+1}='Received Spectrum';
+  h=plot(f_kHz,avg_noise+zeros(size(f_kHz)),'r--','LineWIDTH',2);legs{end+1}='Average Noise Floor';
+  h=plot(f_kHz,avg_noise+zeros(size(f_kHz))+AGC,'g--','LineWidth',2);legs{end+1}='AGC Threshold';
   axs=axis();
+  h=plot(f1_kHz+[0,0],axs(3:4),'ko','LineWidth',2);legs{end+1}='Tone 1';
+  h=plot(f2_kHz+[0,0],axs(3:4),'k*','LiNeWidth',2);legs{end+1}='Tone 2';
   h=xlabel('\bffrequency (kHz)');set(h,'FoNtSiZe',16);
   h=ylabel('\bfPower Spectrum (dBW/Hz)');set(h,'FoNtSiZe',16);
   grid('on');
-  h=legend({'Received Spectrum','Average Noise Floor','AGC Threshold'},'Location','SouthWest');
+  h=legend(legs,'Location','eastoutside');
   set(h,'fOntSiZe',16);
+  
+  title_str = sprintf('Power Spectral Densities: SNR %0.f',input.SNR_dB);
+  try
+    h=sgtitle(title_str);
+  catch
+    subplot(2,1,1);
+    h=title(title_str);
+  end
+  h.FontWeight='bold';
+  h.FontSize=18;
+  title_str = sprintf('psd_SNR_%d',input.SNR_dB);
+  if savefigs;print(H,'-dpng',[title_str '.png']);end
 end
 
 
@@ -136,13 +167,15 @@ function [output] = simulateSystem(input)
   %%%%%%%%%%%%%%
   
   %%%%%%%%%%%%%%
+  phi1 = 2*pi*rand(1);
+  phi2 = 2*pi*rand(1);%random initial phase
   t = 0:Ts:T;
-  x = A0        *sin(2*pi*f1*t);%signal 1
-  y = A0*A2relA1*cos(2*pi*f2*t);%signal 2
+  x = A0        *cos(2*pi*f1*t+phi1);%signal 1
+  y = A0*A2relA1*cos(2*pi*f2*t+phi2);%signal 2
   tone_input = x+y;
   E_input = trapz(t,x.^2);
   assert(abs(E_input - A0^2/2*T)<1e-8);
-  %Input Signal Energy for one tone should be A0^2*T
+  %Input Signal Energy for one tone should be A0^2/2*T
 
   NSR_dB = -SNR_dB;
   NSR_WpW = 10.^(NSR_dB/10);
@@ -176,12 +209,12 @@ function [output] = simulateSystem(input)
   f = fs/2*linspace(-1,1,length(t));
   Z  = fftshift(fft(z ));
   Zc = fftshift(fft(zc));
-  crappy_filter = (min_f0 <= f & f <= max_f0);
-  f = f(crappy_filter);
-  Z     = Z (crappy_filter);
-  Zc    = Zc(crappy_filter);
-  Z_dBW  = fftshift(20*log10(abs(Z )));
-  Zc_dBW = fftshift(20*log10(abs(Zc)));
+  wall_filter = (min_f0 <= f & f <= max_f0);
+  f = f(wall_filter);
+  Z     = Z (wall_filter);
+  Zc    = Zc(wall_filter);
+  Z_dBW  = 20*log10(abs(Z ));
+  Zc_dBW = 20*log10(abs(Zc));
   avg_noise = mean(Zc_dBW(:));
   %%%%%%%%%%%%%%
   output.f = f;
@@ -189,4 +222,9 @@ function [output] = simulateSystem(input)
   output.led_state_psd = Zc_dBW;
   output.avg_noise = avg_noise;
   %%%%%%%%%%%%%%
+end
+
+
+function [Y] = aindex(X,idx)
+  Y = X(idx);
 end
