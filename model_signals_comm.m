@@ -3,10 +3,10 @@
 
 clear; clc;
 
-fignum=1;
 
-PLOT_TIME_SIGNALS = true;
-PLOT_FREQ_SIGNALS = true;
+global fignum;fignum=1;
+
+BASIC_ANALYSIS = true;
 %%%%%%%%%%%%%%
 % Constants for the problem
 input.T = 10;
@@ -19,19 +19,31 @@ input.A0 = 1e-3;%1 mV p2p
 input.A2relA1 = 1;%ratio of tone2 amplitude/tone 1 amplitude
 %%%%%%%%%%%%%%
 % Parameters that can change
-AGC = 10;%dB Threshold above the noise floor
 %%%%%%%%%%%%%%
+input.AGC = 10;%dB Threshold above the noise floor
 input.SNR_dB = 10;
 % Signal peaks of interest
 input.f1 = 2.5e3;
 input.f2 = 3.0e3;
 %%%%%%%%%%%%%%
 
-output = simulateSystem(input);
+if BASIC_ANALYSIS
+  input.SNR_dB = 10;
+  input.f1 = 2.5e3;
+  input.f2 = 3.0e3;
 
+  output = simulateSystem(input);
+
+  % Signal peaks of interest
+  timeSignalPlot      (input,output);
+  plotFrequencySignals(input,output);
+end
+
+  
 %%%%%%%%%%%%%%
 % Plot the time signal
-if PLOT_TIME_SIGNALS
+function timeSignalPlot(input,output)
+  global fignum;
   %%%%%%%%%%%%%%
   fs = 1/input.Ts;
   f1 =   input.f1;
@@ -68,10 +80,12 @@ end
 
 %%%%%%%%%%%%%%
 % Plot the frequency content
-if PLOT_FREQ_SIGNALS
+function plotFrequencySignals(input,output)
+  global fignum;
   %%%%%%%%%%%%%%
   f1_kHz = input.f1/1e3;
   f2_kHz = input.f2/1e3;
+  AGC = input.AGC;
   f_kHz = output.f/1e3;
   Z_dBW = output.pca_aux_psd;
   Zc_dBW = output.led_state_psd;
