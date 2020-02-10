@@ -27,10 +27,10 @@ input.SNR_dB = 10;
 %%%%%%%%%%%%%%
 
 if BASIC_ANALYSIS
-  input.SNR_dB = 90;
+  input.SNR_dB = 10;
   input.f1 = 1.2e3;
-  input.f2 = 3.55e3;
-  input.A2relA1=10^(-0/20);%2dB difference
+  input.f2 = 1.3e3;
+  input.A2relA1=10^(0/20);%2dB difference
 
   output = simulateSystem(input);
 
