@@ -48,11 +48,10 @@ try:
             cal_ave = np.loadtxt('cal_data.txt')
     else:
         cal_ave = 0
-        continue
 
     data = sample()
 
-#    data = np.loadtxt('data/data_-40db_snr.txt', dtype='float32')
+    #data = np.loadtxt('data/data_-40db_snr.txt', dtype='float32')
 
     data0 = windowing(data)
 
@@ -61,7 +60,7 @@ try:
     ave_fft0 = average_fft(fft_data0) - cal_ave
 
 
-#generate frequency vector
+    #generate frequency vector
     f_vec = np.arange(0, tSamp) * SampFreq / tSamp
 
 	#signal prep and remove offset
@@ -94,7 +93,7 @@ try:
         print("No peaks were identified. Check graph.")
 
 
-# Generate plot
+    # Generate plot
     plt.style.use('ggplot')
     plt.rcParams['font.size']=14
     fig = plt.figure(figsize=(13,4))
@@ -102,11 +101,11 @@ try:
     plt.plot(f_vec, ave_fft0)
     ax.set_ylim([0, np.max(ave_fft0)*1.1])
     ax.set_xlim([1, 4500])
-#	plt.xlabel('Frequency [Hz]')
-#	plt.ylabel('Amplitude')
-#	ax.set_xscale('log')
+    #plt.xlabel('Frequency [Hz]')
+    #plt.ylabel('Amplitude')
+    #ax.set_xscale('log')
     plt.grid(which='both', axis='both')
-#annotate graph with peaks
+    #annotate graph with peaks
     p = 0
     annot_array = []
     while p < len(peaks_x1):
@@ -124,7 +123,7 @@ finally:
 
 
 def sample():
-    IO = io.contents							#pointer dereferencing, using contents member
+    IO = io.contents					#pointer dereferencing, using contents member
     if IO.Errr:
         raise AssertionError("pruio_new failed (%s)" %IO.Errr)
 
@@ -162,6 +161,7 @@ def sample():
     tim = t1 - t0
     print("Data collected in %s seconds." % tim)
     print
+    return data
 
 def windowing(data):
 #apply windowing
@@ -176,6 +176,7 @@ def windowing(data):
     tim = t1 - t0
     print("Windowing completed in %s seconds" % tim)
     print
+    return data0
 
 def fft(data0):
 #compute FFT
@@ -189,6 +190,7 @@ def fft(data0):
     tim = t1 - t0
     print("FFT completed in %s seconds" % tim)
     print
+    return fft_data0
 
 def ave_fft0(fft_data0):
 #average all data sets
@@ -203,6 +205,7 @@ def ave_fft0(fft_data0):
     tim = t1 - t0
     print("Averaging completed in %s seconds" % tim)
     print
+    return ave_fft0
 
 def peak_find(ave_fft0):
 #Peak finding stuff
@@ -210,7 +213,7 @@ def peak_find(ave_fft0):
     print("Peak finding. First pass.")
     print
     while len(peaks_x) < 8:
-    peaks_x = peakutils.indexes(ave_fft0,thres=threshold,min_dist=peak_shift)
+        peaks_x = peakutils.indexes(ave_fft0,thres=threshold,min_dist=peak_shift)
         threshold += -0.1
 
     print("Peak finding. Second pass.")
@@ -248,6 +251,6 @@ def peak_find(ave_fft0):
     while len(peaks_x) > 6:
         peaks_x = peakutils.indexes(ave_fft0,thres=threshold,min_dist=peak_shift)
         threshold += 0.000001
-#    print("Threshold = %s" % threshold)
-#    print("Number of peaks = %s" % len(peaks_x))
-return peaks_x
+    #print("Threshold = %s" % threshold)
+    #print("Number of peaks = %s" % len(peaks_x))
+    return peaks_x
